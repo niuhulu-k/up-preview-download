@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        img {
+            width: 100px;
+            height: 100px;
+        }
+
+        #box {
+            width: 300px;
+            margin: 0 auto;
+        }
+
+        #box > img {
+            float: left;
+        }
+    </style>
+</head>
+<body>
+
+
+<div>
+    <!--  第一个 -->
+        <input type='file' id='iptfileupload' style="margin: 0 auto;display: block" name="a"/>
+        <div class="box" style="width: 100px;height: 100px;margin: 0 auto">
+            <img alt='' id='img'/>
+
+        </div>
+        <p style="text-align: center;">选择的图片路径是: <span id="img_path1"></span></p>
+
+
+        <div style="position: relative">
+            <input type="file" class="form-control" id="thumbnail" name="thumbnail"
+                   style="margin: 0 auto;display: block" name="b">
+            <div id="box">
+
+            </div>
+            <div style="clear: both"></div>
+            <p style="text-align: center">选择的图片路径是: <span id="img_path2"></span></p>
+        </div>
+
+
+        <div style="width: 100px;margin: 0px auto">
+            <button id="btn">
+                提交
+            </button>
+        </div>
+
+
+
+</div>
+
+
+<script type="text/javascript">
+
+    var iptfileupload = document.getElementById("iptfileupload");
+    var btn = document.getElementById("btn");
+    var oldName = "";
+    var dataArr = {data: []};
+
+    iptfileupload.onchange = function () {
+
+
+        for (var x = 0; x < dataArr.data.length; x++) {
+            if (dataArr.data[x].name == oldName) {
+                dataArr.data.splice(x, 1);
+            }
+        }
+        oldName = this.files[0].name;
+
+
+        var reader = new FileReader();
+        reader.readAsDataURL(this.files[0]);
+
+        var fileName = this.files[0].name;
+        reader.onload = function (e) {
+            var imgMsg = {
+                name: fileName,//获取文件名
+                base64: this.result   //reader.readAsDataURL方法执行完后，base64数据储存在reader.result里
+            }
+            dataArr.data.push(imgMsg)
+            var file_img = document.getElementById("img"),
+
+                img_path1 = document.getElementById("img_path1"),
+                iptfileupload = document.getElementById('iptfileupload');
+
+            img_path1.innerText = iptfileupload.value;
+            file_img.src = imgMsg.base64;
+        }
+
+
+    }
+
+
+    var thub = document.getElementById("thumbnail");
+    var box = document.getElementById("box");
+    var img_path2 = document.getElementById("img_path2");
+
+
+    thub.onchange = function () {
+
+        var reader = new FileReader();
+        reader.readAsDataURL(this.files[0]);
+
+        var fileName = this.files[0].name;
+        var this_val = this.value
+        reader.onload = function (e) {
+            var imgMsg = {
+                name: fileName,//获取文件名
+                base64: this.result   //reader.readAsDataURL方法执行完后，base64数据储存在reader.result里
+            }
+            dataArr.data.push(imgMsg)
+            var eImg = '<img src="' + imgMsg.base64 + '" alt="' + imgMsg.name + '" title="' + this_val + '">'
+            box.innerHTML += eImg;
+
+        }
+
+        img_path2.innerHTML += this.value + ",";
+
+    }
+
+
+    box.onclick = function (ev) {
+        var ev = ev || window.event;
+        var target = ev.target || ev.srcElement;
+        //alert(target.innerHTML);
+        if (target.nodeName.toLowerCase() == "img") {
+            console.log(target.alt);
+
+//           删除数组中的数据
+
+            for (var x = 0; x < dataArr.data.length; x++) {
+                if (dataArr.data[x].name == target.alt) {
+                    dataArr.data.splice(x, 1);
+                }
+            }
+
+            var target_art = target.title + ",";
+            this.removeChild(target);
+            var img_path2_inner = img_path2.innerHTML;
+            var newinner = img_path2_inner.replace(target_art, "");
+            img_path2.innerHTML = newinner;
+        }
+    }
+
+    btn.onclick=function () {
+        var xmlhttp;
+        if (window.XMLHttpRequest)
+        {
+            xmlhttp=new XMLHttpRequest();
+        }
+        else
+        {
+            xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xmlhttp.open("POST","/upimg");
+        xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded")
+        xmlhttp.send(JSON.stringify(dataArr));
+        xmlhttp.onreadystatechange=function()
+        {
+            if (xmlhttp.readyState==4 && xmlhttp.status==200)
+            {
+                Doc=xmlhttp.responseText;
+                alert("保存成功");
+
+            }
+        }
+
+    }
+</script>
+</body>
+</html>
